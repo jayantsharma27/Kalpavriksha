@@ -6,7 +6,7 @@
  *****************************************************************************/
 
 #include <stdio.h>
-#include <stdlib.h> // Memory Allocate,system("cls")
+#include <stdlib.h> // Memory Allocate, system("cls")
 #include <string.h>
 #include <stdbool.h>
 
@@ -44,7 +44,7 @@ bool userIdExists(int id)
     char file_name[256];
     int file_age;
 
-    while (fscanf(file, "%d,%255[^,],%d\n", &file_id, file_name, &file_age) == 3) // %[...] (The Scanset) custom set of characters you want to match, [^,] (The caret) ^ at the beginning inverts the rule match any character that is NOT a comma
+    while (fscanf(file, "%d,%255[^,],%d\n", &file_id, file_name, &file_age) == 3) // %[...] (The Scanset) custom set of characters you want to match, [^,] (The caret) ^ at the beginning inverts the rule ie match any character that is NOT a comma
     {
         if (file_id == id)
         {
@@ -87,7 +87,7 @@ void createUser()
 
     printf("Enter Name: ");
     fgets(buffer, sizeof(buffer), stdin);
-    buffer[strcspn(buffer, "\n")] = 0; // string complement span length of string not in forbidden set
+    buffer[strcspn(buffer, "\n")] = 0; // string complement span basically length of string not in forbidden set
 
     newUser.name = malloc(strlen(buffer) + 1);
     if (newUser.name == NULL)
@@ -102,7 +102,7 @@ void createUser()
     while (scanf("%d", &newUser.age) != 1)
     {
         printf("Invalid input. Please enter a number for the Age: ");
-        clearInputBuffer(); // Infinite loop due to bad input
+        clearInputBuffer(); // Protects from infinite loop due to bad input
     }
     clearInputBuffer();
 
@@ -265,7 +265,7 @@ void deleteUser()
     {
         if (id == id_to_delete)
         {
-            found = true; // Skip writing this line to the temp file
+            found = true;
         }
         else
         {
