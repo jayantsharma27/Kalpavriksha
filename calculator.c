@@ -1,27 +1,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
+#include <ctype.h> // Character Type isdigit(), isspace()
 #include <stdbool.h>
-#include <stddef.h> // For size_t and alignment
+#include <stddef.h> // Standard Definitions size_t
 
-#define ARENA_CAPACITY_BYTES (1024 * 4) // 4KB total memory for everything
-#define STACK_MAX_DEPTH 256            // Max depth for our stacks
+#define ARENA_CAPACITY_BYTES (1024 * 4) // #define preprocessor macro  replaces every instance of the macro name with its value
+#define STACK_MAX_DEPTH 256
 
 // --- The Arena Allocator ---
+// one allocation one free() call vs regular malloc() & free()
 typedef struct {
     char* memory;
-    size_t used;
+    size_t used; // size_t (Code works on 32-bit and 64-bit systems) vs int vs unsigned int
     size_t capacity;
 } Arena;
 
-void* arena_alloc(Arena* arena, size_t size) {
-    // Align the size to the next multiple of a pointer size for safety
-    size_t aligned_size = (size + sizeof(void*) - 1) & ~(sizeof(void*) - 1);
+void* arena_alloc(Arena* arena, size_t size) { // void* generic pointer, Areana * pointer to Arena struct to modify its used field
+
+    size_t aligned_size = (size + sizeof(void *) - 1) & ~(sizeof(void *) - 1); // memory alignment, magic padding and then round down to the last full row ie multiple of sizeof(void *)
 
     if (arena->used + aligned_size > arena->capacity) {
-        fprintf(stderr, "Error: Arena out of memory.\n");
-        return NULL; // Out of memory
+        fprintf(stderr, "Error: Arena out of memory.\n"); // Standard Error, redirect the "clean" output while still seeing the errors on your screen, unbuffered
+        return NULL;
     }
     
     void* ptr = arena->memory + arena->used;
@@ -29,10 +30,16 @@ void* arena_alloc(Arena* arena, size_t size) {
     return ptr;
 }
 
-// --- Helper Functions (No changes) ---
-int precedence(char op);
+int precedence(char op)
+{
+    if (op == '+' || op == '-')
+        return 1;
+    if (op == '*' || op == '/')
+        return 2;
+    return 0;
+}
 
-// --- The Core Logic (Now uses memory from the arena) ---
+// --- The Operational Logic ---
 void applyOp(int* values_top, char* ops_top) {
     char op = *(--ops_top);
     int val2 = *(--values_top);
@@ -52,12 +59,11 @@ void applyOp(int* values_top, char* ops_top) {
     }
 }
 
+// --- The Evaluation Logic ---
 int evaluateExpression(const char* expression, Arena* arena) {
-    // Allocate our stacks directly from the arena. No more dynamic structs.
     int* values_stack = (int*)arena_alloc(arena, STACK_MAX_DEPTH * sizeof(int));
     char* ops_stack = (char*)arena_alloc(arena, STACK_MAX_DEPTH * sizeof(char));
 
-    // Pointers to the current top of each stack
     int* values_top = values_stack;
     char* ops_top = ops_stack;
 
@@ -132,12 +138,5 @@ int main() {
     free(arena.memory);
     printf("\nArena freed. Program finished.\n");
 
-    return 0;
-}
-
-// --- Collapsed Precedence Function ---
-int precedence(char op) {
-    if (op == '+' || op == '-') return 1;
-    if (op == '*' || op == '/') return 2;
     return 0;
 }
