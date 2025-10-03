@@ -1,4 +1,10 @@
-#include <stdio.h>
+/******************************************************************************
+ * Author       : Jayant Sharma
+ * File         : calculator.c
+ * Description  : A command-line calculator that evaluates mathematical expressions from a string, respecting the order of operations.
+ *****************************************************************************/
+
+ #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h> // Character Type isdigit(), isspace()
@@ -94,7 +100,7 @@ int evaluateExpression(const char* expression, Arena* arena) {
 }
 
 int main() {
-    // --- Step 1: Create the Arena ---
+    
     Arena arena = {
         .memory = malloc(ARENA_CAPACITY_BYTES),
         .capacity = ARENA_CAPACITY_BYTES,
@@ -102,7 +108,7 @@ int main() {
     };
     if (arena.memory == NULL) return 1;
 
-    // --- Step 2: Read expression into a temporary buffer ---
+    
     char temp_buffer[1024];
     printf("Enter a mathematical expression: ");
     if (fgets(temp_buffer, sizeof(temp_buffer), stdin) == NULL) {
@@ -111,12 +117,12 @@ int main() {
     }
     temp_buffer[strcspn(temp_buffer, "\n")] = 0;
 
-    // --- Step 3: Copy the expression into the arena ---
+    
     size_t expr_len = strlen(temp_buffer);
     char* expression_in_arena = (char*)arena_alloc(&arena, expr_len + 1);
     strcpy(expression_in_arena, temp_buffer);
 
-    // --- Step 4: Validation (on the arena copy) ---
+    
     bool is_valid = true;
     for (int i = 0; expression_in_arena[i]; i++) {
         if (!isdigit(expression_in_arena[i]) && !isspace(expression_in_arena[i]) &&
@@ -129,12 +135,11 @@ int main() {
     if (!is_valid) {
         printf("Error: Invalid expression.\n");
     } else {
-        // --- Step 5: Evaluate ---
+        
         int result = evaluateExpression(expression_in_arena, &arena);
         printf("Result: %d\n", result);
     }
 
-    // --- Step 6: Free the entire arena in one go ---
     free(arena.memory);
     printf("\nArena freed. Program finished.\n");
 
