@@ -1,14 +1,21 @@
 /******************************************************************************
- * Author       : Jayant Sharma
- * File         : crud.c
- * Description  : A command-line application to perform CRUD operations
+ * Author        : Jayant Sharma
+ * File          : crud.c
+ * Description   : A command-line application to perform CRUD operations
  * (Create, Read, Update, Delete) in file using C Language
  *****************************************************************************/
 
 #include <stdio.h>
-#include <stdlib.h> // Memory Allocate, system("cls")
+#include <stdlib.h> // Memory Allocate, system()
 #include <string.h>
 #include <stdbool.h>
+
+// Define clear screen command for cross-platform compatibility
+#ifdef _WIN32 // On a 64-bit Windows system, both _WIN32 and _WIN64 are defined
+#define CLEAR_SCREEN "cls"
+#else
+#define CLEAR_SCREEN "clear"
+#endif
 
 // --- USER STRUCTURE ---
 typedef struct // Type Definition - convenient alias, don't have to write struct User every time
@@ -56,7 +63,6 @@ bool userIdExists(int id)
     return false;
 }
 
-
 // CREATE
 void createUser()
 {
@@ -99,11 +105,13 @@ void createUser()
     strcpy(newUser.name, buffer);
 
     printf("Enter Age: ");
-    while (scanf("%d", &newUser.age) != 1)
+    // Added check for negative age
+    while (scanf("%d", &newUser.age) != 1 || newUser.age <= 0)
     {
-        printf("Invalid input. Please enter a number for the Age: ");
+        printf("Invalid input. Please enter a positive number for the Age: ");
         clearInputBuffer(); // Protects from infinite loop due to bad input
     }
+
     clearInputBuffer();
 
     FILE *file = fopen(FILENAME, "a");
@@ -149,7 +157,8 @@ void readUsers()
     {
         printf("No users found in the file.\n");
     }
-    else{
+    else
+    {
         printf("Total users found in the file :- %d\n", count);
     }
 
@@ -200,9 +209,10 @@ void updateUser()
             new_name_buffer[strcspn(new_name_buffer, "\n")] = 0;
 
             printf("Enter new Age: ");
-            while (scanf("%d", &new_age) != 1)
+            // Added check for negative age
+            while (scanf("%d", &new_age) != 1 || new_age <= 0)
             {
-                printf("Invalid input. Please enter a number for the Age: ");
+                printf("Invalid input. Please enter a positive number for the Age: ");
                 clearInputBuffer();
             }
             clearInputBuffer();
@@ -295,7 +305,7 @@ int main()
     int choice;
     do
     {
-        system("cls"); // Windows cls, Linux macOS clear
+        system(CLEAR_SCREEN); // Use the cross-platform clear screen command
 
         printf("\n--- CRUD Operations in File using C Language ---\n");
         printf("1. Add User (Create)\n");
