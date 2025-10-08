@@ -1,43 +1,33 @@
-/******************************************************************************
- * Author        : Jayant Sharma
- * File          : calculator.c
- * Description   : A command-line calculator that evaluates mathematical expressions from a string, respecting the order of operations.
- *****************************************************************************/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h> // Character Type isdigit(), isspace()
+#include <ctype.h> 
 #include <stdbool.h>
-#include <stddef.h> // Standard Definitions size_t
-#include <limits.h> // For LLONG_MAX
+#include <stddef.h>
+#include <limits.h>
 
-#define ARENA_CAPACITY_BYTES (1024 * 4) // #define preprocessor macro  replaces every instance of the macro name with its value
+#define ARENA_CAPACITY_BYTES (1024 * 4)
 #define STACK_MAX_DEPTH 256
 
 // --- The Arena Allocator ---
-// one allocation one free() call vs regular malloc() & free()
 typedef struct
 {
     char *memory;
-    size_t used; // size_t (Code works on 32-bit and 64-bit systems) vs int vs unsigned int
+    size_t used;
     size_t capacity;
 } Arena;
 
-// Function declarations
+
 bool isExpressionSyntaxValid(const char *expr);
 long long evaluateExpression(const char *expression, Arena *arena);
 
 void *arena_alloc(Arena *arena, size_t size)
-{ // void* generic pointer, Areana * pointer to Arena struct to modify its used field
+{
 
-    size_t aligned_size = (size + sizeof(void *) - 1) & ~(sizeof(void *) - 1); // memory alignment, magic padding and then round down to the last full row ie multiple of sizeof(void *)
+    size_t aligned_size = (size + sizeof(void *) - 1) & ~(sizeof(void *) - 1);
 
     if (arena->used + aligned_size > arena->capacity)
     {
-        
-        // fprintf(stderr, "Error: Arena out of memory.\n"); 
-        // Standard Error, redirect the "clean" output while still seeing the errors on your screen, unbuffered
         return NULL;
     }
 
@@ -103,7 +93,7 @@ void applyOp(long long *values_top, char *ops_top)
             exit(EXIT_FAILURE);
         }
         if (val1 == LLONG_MIN && val2 == -1)
-        { // Overflow in division
+        {
             fprintf(stderr, "Error: Arithmetic overflow during division.\n");
             exit(EXIT_FAILURE);
         }
@@ -112,7 +102,7 @@ void applyOp(long long *values_top, char *ops_top)
     }
 }
 
-// --- The Evaluation Logic ---
+
 long long evaluateExpression(const char *expression, Arena *arena)
 {
     long long *values_stack = (long long *)arena_alloc(arena, STACK_MAX_DEPTH * sizeof(long long));
@@ -150,10 +140,10 @@ long long evaluateExpression(const char *expression, Arena *arena)
                     sign *= -1;
                 i++;
                 while (isspace(expression[i]))
-                    i++; // Skip spaces after sign
+                    i++;
             }
 
-            // After signs, we must find a number.
+            
             if (!isdigit(expression[i]))
             {
                 fprintf(stderr, "Error: Invalid expression syntax - expected number.\n");
@@ -163,7 +153,7 @@ long long evaluateExpression(const char *expression, Arena *arena)
             long long num = 0;
             while (isdigit(expression[i]))
             {
-                // Check for overflow before adding the next digit
+                
                 if (num > (LLONG_MAX - (expression[i] - '0')) / 10)
                 {
                     fprintf(stderr, "Error: Number in expression exceeds maximum value.\n");
@@ -173,7 +163,7 @@ long long evaluateExpression(const char *expression, Arena *arena)
                 i++;
             }
             *(values_top++) = num * sign;
-            i--; // Correct for the outer loop's i++
+            i--;
             state = EXPECT_OPERATOR;
         }
         else // state == EXPECT_OPERATOR
@@ -196,7 +186,7 @@ long long evaluateExpression(const char *expression, Arena *arena)
     return values_stack[0];
 }
 
-// --- Validation logic to check expression syntax ---
+
 bool isExpressionSyntaxValid(const char *expr)
 {
     enum
@@ -255,7 +245,7 @@ bool isExpressionSyntaxValid(const char *expr)
         }
         else
         {
-            return false; // Invalid character
+            return false;
         }
     }
 
@@ -283,7 +273,7 @@ int main()
         printf("\nEnter a mathematical expression: ");
         if (fgets(temp_buffer, sizeof(temp_buffer), stdin) == NULL)
         {
-            break; // Exit on Ctrl+D (EOF)
+            break;
         }
         temp_buffer[strcspn(temp_buffer, "\n")] = 0;
 
@@ -298,15 +288,12 @@ int main()
         }
         else
         {
-            // Note: evaluateExpression will now exit on overflow, so no need for a return check
             long long result = evaluateExpression(expression_in_arena, &arena);
             printf("Result: %lld\n", result);
         }
 
-        // --- Loop control ---
         printf("\nPress 'c' to continue : ");
         scanf(" %c", &choice);
-        // Clear the rest of the input buffer to prevent issues on the next fgets
         while (getchar() != '\n')
             ;
 
