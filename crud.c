@@ -1,24 +1,17 @@
-/******************************************************************************
- * Author        : Jayant Sharma
- * File          : crud.c
- * Description   : A command-line application to perform CRUD operations
- * (Create, Read, Update, Delete) in file using C Language
- *****************************************************************************/
-
 #include <stdio.h>
-#include <stdlib.h> // Memory Allocate, system()
+#include <stdlib.h> 
 #include <string.h>
 #include <stdbool.h>
 
-// Define clear screen command for cross-platform compatibility
-#ifdef _WIN32 // On a 64-bit Windows system, both _WIN32 and _WIN64 are defined
+// Clear screen command for cross-platform compatibility
+#ifdef _WIN32
 #define CLEAR_SCREEN "cls"
 #else
 #define CLEAR_SCREEN "clear"
 #endif
 
-// --- USER STRUCTURE ---
-typedef struct // Type Definition - convenient alias, don't have to write struct User every time
+
+typedef struct
 {
     int id;
     char *name;
@@ -27,7 +20,7 @@ typedef struct // Type Definition - convenient alias, don't have to write struct
 
 const char *FILENAME = "users.txt";
 
-// Function declarations
+
 bool userIdExists(int id);
 void clearInputBuffer();
 
@@ -51,7 +44,7 @@ bool userIdExists(int id)
     char file_name[256];
     int file_age;
 
-    while (fscanf(file, "%d,%255[^,],%d\n", &file_id, file_name, &file_age) == 3) // %[...] (The Scanset) custom set of characters you want to match, [^,] (The caret) ^ at the beginning inverts the rule ie match any character that is NOT a comma
+    while (fscanf(file, "%d,%255[^,],%d\n", &file_id, file_name, &file_age) == 3)
     {
         if (file_id == id)
         {
@@ -63,7 +56,7 @@ bool userIdExists(int id)
     return false;
 }
 
-// CREATE
+
 void createUser()
 {
     User newUser;
@@ -87,13 +80,13 @@ void createUser()
         else
         {
             printf("Invalid input. Please enter a number for the ID: ");
-            clearInputBuffer();
+            clearInputBuffer(); // Protects from infinite loop due to bad input
         }
     }
 
     printf("Enter Name: ");
     fgets(buffer, sizeof(buffer), stdin);
-    buffer[strcspn(buffer, "\n")] = 0; // string complement span basically length of string not in forbidden set
+    buffer[strcspn(buffer, "\n")] = 0;
 
     newUser.name = malloc(strlen(buffer) + 1);
     if (newUser.name == NULL)
@@ -105,11 +98,11 @@ void createUser()
     strcpy(newUser.name, buffer);
 
     printf("Enter Age: ");
-    // Added check for negative age
+    
     while (scanf("%d", &newUser.age) != 1 || newUser.age <= 0)
     {
         printf("Invalid input. Please enter a positive number for the Age: ");
-        clearInputBuffer(); // Protects from infinite loop due to bad input
+        clearInputBuffer();
     }
 
     clearInputBuffer();
@@ -129,7 +122,7 @@ void createUser()
     free(newUser.name);
 }
 
-// READ
+
 void readUsers()
 {
     FILE *file = fopen(FILENAME, "r");
@@ -144,7 +137,7 @@ void readUsers()
     int count = 0;
 
     printf("\n--- User Records ---\n");
-    printf("%-5s %-20s %s\n", "ID", "Name", "Age"); // % tells printf that a format specifier is coming next, - flag for left alignment, eg [I] [D] [ ] [ ] [ ]
+    printf("%-5s %-20s %s\n", "ID", "Name", "Age");
     printf("------------------------------------\n");
 
     while (fscanf(file, "%d,%255[^,],%d\n", &id, name_buffer, &age) == 3)
@@ -165,7 +158,7 @@ void readUsers()
     fclose(file);
 }
 
-// UPDATE
+
 void updateUser()
 {
     int id_to_update;
@@ -209,7 +202,7 @@ void updateUser()
             new_name_buffer[strcspn(new_name_buffer, "\n")] = 0;
 
             printf("Enter new Age: ");
-            // Added check for negative age
+            
             while (scanf("%d", &new_age) != 1 || new_age <= 0)
             {
                 printf("Invalid input. Please enter a positive number for the Age: ");
@@ -241,7 +234,7 @@ void updateUser()
     }
 }
 
-// DELETE
+
 void deleteUser()
 {
     int id_to_delete;
@@ -299,13 +292,13 @@ void deleteUser()
     }
 }
 
-// MAIN
+
 int main()
 {
     int choice;
     do
     {
-        system(CLEAR_SCREEN); // Use the cross-platform clear screen command
+        system(CLEAR_SCREEN);
 
         printf("\n--- CRUD Operations in File using C Language ---\n");
         printf("1. Add User (Create)\n");
@@ -345,7 +338,7 @@ int main()
         if (choice != 5)
         {
             printf("\nPress Enter to continue...");
-            getchar(); // tells the program to stop and wait until there is a character in the input buffer to be read ie no flash
+            getchar();
         }
 
     } while (choice != 5);
