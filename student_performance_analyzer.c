@@ -7,7 +7,7 @@
 #define MAX_STUDENTS 100
 #define MIN_STUDENTS 1
 #define MAX_NAME_LENGTH 100
-#define NUM_MARKS 3
+#define NUM_SUBJECTS 3
 #define LINE_BUFFER_SIZE 256
 
 
@@ -15,7 +15,7 @@ typedef struct
 {
     int rollNo;
     char name[MAX_NAME_LENGTH];
-    int marks[NUM_MARKS];
+    int marks[NUM_SUBJECTS];
 } Student;
 
 
@@ -24,7 +24,7 @@ float calculateAverageMarks(int total);
 char assignGrade(float average);
 void trimTrailingWhitespace(char *str);
 void displayReport(int numStudents, Student students[]);
-void printSortedRollsRecursive(const Student students[], int index, int totalStudents);
+void printSortedRollNoRecursive(const Student students[], int index, int totalStudents);
 int compareStudentsByRoll(const void *a, const void *b);
 bool isRollNoUnique(int rollNo, const Student students[], int currentCount);
 
@@ -49,7 +49,7 @@ int main()
             break;
         }
 
-        printf(" -> Invalid input. Please enter a number between %d and %d: ", MIN_STUDENTS, MAX_STUDENTS);
+        printf("Invalid input. Please enter a number between %d and %d: ", MIN_STUDENTS, MAX_STUDENTS);
 
         
         int c;
@@ -60,7 +60,7 @@ int main()
     }
 
     Student students[numStudents];
-    printf("\nEnter student details (Roll Name Marks1 Marks2 Marks3):\n");
+    printf("\nEnter student details in this format \"RollNo. Name Marks1 Marks2 Marks3\":\n");
 
     for (int i = 0; i < numStudents; i++)
     {
@@ -69,37 +69,44 @@ int main()
 
         if (fgets(lineBuffer, sizeof(lineBuffer), stdin) == NULL)
         {
-            printf("Error reading input. Exiting.\n");
+            printf("Error reading input, exiting...\n");
             return 1; 
         }
 
         
         int tempRollNo;
         char tempName[MAX_NAME_LENGTH];
-        int tempM1, tempM2, tempM3;
+        int tempMarks1, tempMarks2, tempM3;
 
         
         int itemsParsed = sscanf(lineBuffer, "%d %99[^0-9] %d %d %d",
-                                 &tempRollNo, tempName, &tempM1, &tempM2, &tempM3);
+                                 &tempRollNo, tempName, &tempMarks1, &tempMarks2, &tempM3);
 
        
         if (itemsParsed != 5)
         {
-            printf(" -> Invalid input format. Please try again.\n");
+            printf("Invalid input format. Please try again.\n");
             i--; 
+            continue;
+        }
+
+        if (tempRollNo<=0)
+        {
+            printf("Error: Roll number must be a positive. Please try again.\n");
+            i--;
             continue;
         }
 
         if (!isRollNoUnique(tempRollNo, students, i))
         {
-            printf(" -> Error: Roll number %d already exists. Please try again.\n", tempRollNo);
+            printf("Error: Roll number %d already exists. Please try again.\n", tempRollNo);
             i--;
             continue;
         }
 
-        if (tempM1 < 0 || tempM1 > 100 || tempM2 < 0 || tempM2 > 100 || tempM3 < 0 || tempM3 > 100)
+        if (tempMarks1 < 0 || tempMarks1 > 100 || tempMarks2 < 0 || tempMarks2 > 100 || tempM3 < 0 || tempM3 > 100)
         {
-            printf(" -> Marks out of range (0-100). Please try again.\n");
+            printf("Marks out of range (0-100). Please try again.\n");
             i--;
             continue;
         }
@@ -107,8 +114,8 @@ int main()
        
         students[i].rollNo = tempRollNo;
         strcpy(students[i].name, tempName);
-        students[i].marks[0] = tempM1;
-        students[i].marks[1] = tempM2;
+        students[i].marks[0] = tempMarks1;
+        students[i].marks[1] = tempMarks2;
         students[i].marks[2] = tempM3;
 
         trimTrailingWhitespace(students[i].name);
@@ -124,7 +131,7 @@ int main()
 
 void displayReport(int numStudents, Student students[])
 {
-    printf("\n--- Student Performance Analyzer Report (Sorted by Roll No) ---\n");
+    printf("\n--- Student Performance Analyzer Report ---\n");
     for (int i = 0; i < numStudents; i++)
     {
         int total = calculateTotalMarks(students[i].marks);
@@ -169,7 +176,7 @@ void displayReport(int numStudents, Student students[])
     }
 
     printf("\nList of Roll Numbers (Sorted, via recursion): ");
-    printSortedRollsRecursive(students, 0, numStudents);
+    printSortedRollNoRecursive(students, 0, numStudents);
     printf("\n");
 }
 
@@ -195,14 +202,14 @@ int compareStudentsByRoll(const void *a, const void *b)
 }
 
 
-void printSortedRollsRecursive(const Student students[], int index, int totalStudents)
+void printSortedRollNoRecursive(const Student students[], int index, int totalStudents)
 {
     if (index >= totalStudents)
     {
         return;
     }
     printf("%d ", students[index].rollNo);
-    printSortedRollsRecursive(students, index + 1, totalStudents);
+    printSortedRollNoRecursive(students, index + 1, totalStudents);
 }
 
 
@@ -214,7 +221,7 @@ int calculateTotalMarks(int marks[])
 
 float calculateAverageMarks(int total)
 {
-    return (float)total / NUM_MARKS;
+    return (float)total / NUM_SUBJECTS;
 }
 
 
