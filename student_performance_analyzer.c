@@ -10,7 +10,6 @@
 #define NUM_SUBJECTS 3
 #define LINE_BUFFER_SIZE 256
 
-
 typedef struct
 {
     int rollNo;
@@ -18,8 +17,7 @@ typedef struct
     int marks[NUM_SUBJECTS];
 } Student;
 
-
-int calculateTotalMarks(int marks[]);
+int calculateTotalMarks(const int marks[]);
 float calculateAverageMarks(int total);
 char assignGrade(float average);
 void trimTrailingWhitespace(char *str);
@@ -28,35 +26,23 @@ void printSortedRollNoRecursive(const Student students[], int index, int totalSt
 int compareStudentsByRoll(const void *a, const void *b);
 bool isRollNoUnique(int rollNo, const Student students[], int currentCount);
 
-
 int main()
 {
     int numStudents;
-
     printf("Enter the number of students (%d-%d): ", MIN_STUDENTS, MAX_STUDENTS);
-
     while (true)
     {
-
         if (scanf("%d", &numStudents) == 1 && numStudents >= MIN_STUDENTS && numStudents <= MAX_STUDENTS)
         {
-            
             int c;
             while ((c = getchar()) != '\n' && c != EOF)
-            {
-                
-            }
-            break;
+                ;
+            break; 
         }
-
         printf("Invalid input. Please enter a number between %d and %d: ", MIN_STUDENTS, MAX_STUDENTS);
-
-        
         int c;
         while ((c = getchar()) != '\n' && c != EOF)
-        {
-            
-        }
+            ;
     }
 
     Student students[numStudents];
@@ -66,33 +52,42 @@ int main()
     {
         char lineBuffer[LINE_BUFFER_SIZE];
         printf("Student %d: ", i + 1);
-
         if (fgets(lineBuffer, sizeof(lineBuffer), stdin) == NULL)
         {
             printf("Error reading input, exiting...\n");
-            return 1; 
+            return 1;
         }
 
-        
         int tempRollNo;
-        char tempName[MAX_NAME_LENGTH];
-        int tempMarks1, tempMarks2, tempM3;
+        char tempName[MAX_NAME_LENGTH] = {0};
+        int tempMarks[NUM_SUBJECTS];
+        int marksCount = 0;
 
-        
-        int itemsParsed = sscanf(lineBuffer, "%d %99[^0-9] %d %d %d",
-                                 &tempRollNo, tempName, &tempMarks1, &tempMarks2, &tempM3);
+        int offset = 0;
+        // %n stores the number of characters consumed.
+        int initialParse = sscanf(lineBuffer, "%d %99[^0-9]%n", &tempRollNo, tempName, &offset);
 
-       
-        if (itemsParsed != 5)
+        if (initialParse == 2)
+        {
+            char *remaining = lineBuffer + offset;
+            int chars_in_loop = 0;
+            while (marksCount < NUM_SUBJECTS && sscanf(remaining, "%d%n", &tempMarks[marksCount], &chars_in_loop) == 1)
+            {
+                marksCount++;
+                remaining += chars_in_loop; 
+            }
+        }
+
+        if (initialParse != 2 || marksCount != NUM_SUBJECTS)
         {
             printf("Invalid input format. Please try again.\n");
-            i--; 
+            i--;
             continue;
         }
 
-        if (tempRollNo<=0)
+        if (tempRollNo <= 0)
         {
-            printf("Error: Roll number must be a positive. Please try again.\n");
+            printf("Error: Roll number must be a positive integer. Please try again.\n");
             i--;
             continue;
         }
@@ -104,28 +99,34 @@ int main()
             continue;
         }
 
-        if (tempMarks1 < 0 || tempMarks1 > 100 || tempMarks2 < 0 || tempMarks2 > 100 || tempM3 < 0 || tempM3 > 100)
+        bool marksAreValid = true;
+        for (int c = 0; c < NUM_SUBJECTS; c++)
+        {
+            if (tempMarks[c] < 0 || tempMarks[c] > 100)
+            {
+                marksAreValid = false;
+                break;
+            }
+        }
+        if (!marksAreValid)
         {
             printf("Marks out of range (0-100). Please try again.\n");
             i--;
             continue;
         }
 
-       
         students[i].rollNo = tempRollNo;
         strcpy(students[i].name, tempName);
-        students[i].marks[0] = tempMarks1;
-        students[i].marks[1] = tempMarks2;
-        students[i].marks[2] = tempM3;
-
         trimTrailingWhitespace(students[i].name);
+
+        for (int c = 0; c < NUM_SUBJECTS; c++)
+        {
+            students[i].marks[c] = tempMarks[c];
+        }
     }
 
-    
     qsort(students, numStudents, sizeof(Student), compareStudentsByRoll);
-
     displayReport(numStudents, students);
-
     return 0;
 }
 
@@ -144,42 +145,37 @@ void displayReport(int numStudents, Student students[])
         printf("Average: %.2f\n", average);
         printf("Grade: %c\n", grade);
 
-        if (grade == 'F')
+        if (grade != 'F')
         {
-            printf("------------------------------------\n");
-            continue;
+            printf("Performance: ");
+            int starCount = 0;
+            switch (grade)
+            {
+            case 'A':
+                starCount = 5;
+                break;
+            case 'B':
+                starCount = 4;
+                break;
+            case 'C':
+                starCount = 3;
+                break;
+            case 'D':
+                starCount = 2;
+                break;
+            }
+            for (int j = 0; j < starCount; j++)
+            {
+                printf("* ");
+            }
+            printf("\n");
         }
-
-        printf("Performance: ");
-        int starCount = 0;
-        switch (grade)
-        {
-        case 'A':
-            starCount = 5;
-            break;
-        case 'B':
-            starCount = 4;
-            break;
-        case 'C':
-            starCount = 3;
-            break;
-        case 'D':
-            starCount = 2;
-            break;
-        }
-
-        for (int j = 0; j < starCount; j++)
-        {
-            printf("* ");
-        }
-        printf("\n------------------------------------\n");
+        printf("------------------------------------\n");
     }
-
     printf("\nList of Roll Numbers (Sorted, via recursion): ");
     printSortedRollNoRecursive(students, 0, numStudents);
     printf("\n");
 }
-
 
 bool isRollNoUnique(int rollNo, const Student students[], int currentCount)
 {
@@ -187,12 +183,11 @@ bool isRollNoUnique(int rollNo, const Student students[], int currentCount)
     {
         if (students[i].rollNo == rollNo)
         {
-            return false; 
+            return false;
         }
     }
     return true; 
 }
-
 
 int compareStudentsByRoll(const void *a, const void *b)
 {
@@ -200,7 +195,6 @@ int compareStudentsByRoll(const void *a, const void *b)
     const Student *studentB = (const Student *)b;
     return studentA->rollNo - studentB->rollNo;
 }
-
 
 void printSortedRollNoRecursive(const Student students[], int index, int totalStudents)
 {
@@ -212,41 +206,32 @@ void printSortedRollNoRecursive(const Student students[], int index, int totalSt
     printSortedRollNoRecursive(students, index + 1, totalStudents);
 }
 
-
-int calculateTotalMarks(int marks[])
+int calculateTotalMarks(const int marks[])
 {
-    return marks[0] + marks[1] + marks[2];
+    int total = 0;
+    for (int i = 0; i < NUM_SUBJECTS; i++)
+    {
+        total += marks[i];
+    }
+    return total;
 }
-
 
 float calculateAverageMarks(int total)
 {
     return (float)total / NUM_SUBJECTS;
 }
 
-
 char assignGrade(float average)
 {
     if (average >= 85)
-    {
         return 'A';
-    }
-    else if (average >= 70)
-    {
+    if (average >= 70)
         return 'B';
-    }
-    else if (average >= 50)
-    {
+    if (average >= 50)
         return 'C';
-    }
-    else if (average >= 35)
-    {
+    if (average >= 35)
         return 'D';
-    }
-    else
-    {
-        return 'F';
-    }
+    return 'F';
 }
 
 void trimTrailingWhitespace(char *str)
