@@ -32,6 +32,9 @@ void cleanupMemory();
 void clearInputBuffer();
 bool readString(char *buffer, int size);
 bool isIdUnique(int id);
+int getIdInput(const char *prompt);
+bool checkEmpty(const char *operation);
+int findIndexById(int id);
 
 int main()
 {
@@ -58,13 +61,13 @@ int main()
     ProductCapacity = noOfProducts;
     ProductCount = 0;
 
-    printf("\nEnter details for the initial %d products:\n", noOfProducts);
+    printf("\nEnter details for the %d products:\n", noOfProducts);
     for (int i = 0; i < noOfProducts; ++i)
     {
         printf("\n--- Enter details for product %d ---\n", i + 1);
         if (!addProduct())
         {
-            fprintf(stderr, "Error: Failed to add initial product %d. Exiting.\n", i + 1);
+            fprintf(stderr, "Error: Failed to add 1st product %d. Exiting.\n", i + 1);
             cleanupMemory();
             return 1;
         }
@@ -144,6 +147,42 @@ void displayMenu()
     printf("==================================\n");
 }
 
+int getIdInput(const char *prompt)
+{
+    int id;
+    printf("%s", prompt);
+    if (scanf("%d", &id) != 1)
+    {
+        clearInputBuffer();
+        printf("Invalid ID format entered.\n");
+        return -1;
+    }
+    clearInputBuffer();
+    return id;
+}
+
+bool checkEmpty(const char *operation)
+{
+    if (ProductCount == 0)
+    {
+        printf("Inventory is empty. Cannot %s.\n", operation);
+        return true;
+    }
+    return false;
+}
+
+int findIndexById(int id)
+{
+    for (int i = 0; i < ProductCount; i++)
+    {
+        if (Inventory[i].productId == id)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
 bool addProduct()
 {
     if (ProductCount >= ProductCapacity)
@@ -174,19 +213,19 @@ bool addProduct()
             newProduct.productId = tempId;
             break;
         }
-        printf(" -> Invalid or duplicate ID. Please enter a unique number between 1 and 10000.\n");
+        printf("Invalid or duplicate ID. Please enter a unique number between 1 and 10000.\n");
         clearInputBuffer();
     }
 
     printf("Product Name (max 50 chars): ");
     if (!readString(newProduct.name, MAX_NAME_LENGTH))
     {
-        printf(" -> Error reading product name.\n");
+        printf("Error reading product name.\n");
         return false;
     }
     if (strlen(newProduct.name) == 0 || strlen(newProduct.name) > 50)
     {
-        printf(" -> Invalid name. Name cannot be empty or exceed 50 characters.\n");
+        printf("Invalid name. Name cannot be empty or exceed 50 characters.\n");
         return false;
     }
 
@@ -199,7 +238,7 @@ bool addProduct()
             newProduct.price = tempPrice;
             break;
         }
-        printf(" -> Invalid price. Please enter a number between 0.00 and 100000.00.\n");
+        printf("Invalid price. Please enter a number between 0.00 and 100000.00.\n");
         clearInputBuffer();
     }
 
@@ -212,7 +251,7 @@ bool addProduct()
             newProduct.quantity = tempQuantity;
             break;
         }
-        printf(" -> Invalid quantity. Please enter a number between 0 and 1000000.\n");
+        printf("Invalid quantity. Please enter a number between 0 and 1000000.\n");
         clearInputBuffer();
     }
 
@@ -225,19 +264,16 @@ bool addProduct()
 void viewAllProducts()
 {
     printf("\n========= PRODUCT LIST =========\n");
-    if (ProductCount == 0)
+    if (checkEmpty("view products"))
     {
-        printf("Inventory is empty.\n");
     }
     else
     {
         for (int i = 0; i < ProductCount; i++)
         {
             printf("Product ID: %d | Name: %s | Price: %.2f | Quantity: %d\n",
-                   Inventory[i].productId,
-                   Inventory[i].name,
-                   Inventory[i].price,
-                   Inventory[i].quantity);
+                   Inventory[i].productId, Inventory[i].name,
+                   Inventory[i].price, Inventory[i].quantity);
         }
     }
     printf("==================================\n");
@@ -245,33 +281,21 @@ void viewAllProducts()
 
 void updateQuantity()
 {
-    if (ProductCount == 0)
+    if (checkEmpty("update quantity"))
     {
-        printf("Inventory is empty. Cannot update quantity.\n");
         return;
     }
 
     int idToUpdate;
     int newQuantity;
-    int foundIndex = -1;
 
-    printf("Enter Product ID to update quantity: ");
-    if (scanf("%d", &idToUpdate) != 1)
+    idToUpdate = getIdInput("Enter Product ID to update quantity: ");
+    if (idToUpdate == -1)
     {
-        clearInputBuffer();
-        printf("Invalid ID format entered.\n");
         return;
     }
-    clearInputBuffer();
 
-    for (int i = 0; i < ProductCount; i++)
-    {
-        if (Inventory[i].productId == idToUpdate)
-        {
-            foundIndex = i;
-            break;
-        }
-    }
+    int foundIndex = findIndexById(idToUpdate);
 
     if (foundIndex == -1)
     {
@@ -289,7 +313,7 @@ void updateQuantity()
                 printf("Quantity updated successfully!\n");
                 break;
             }
-            printf(" -> Invalid quantity. Please enter a number between 0 and 1000000.\n");
+            printf("Invalid quantity. Please enter a number between 0 and 1000000.\n");
             clearInputBuffer();
         }
     }
@@ -297,32 +321,20 @@ void updateQuantity()
 
 void searchProductById()
 {
-    if (ProductCount == 0)
+    if (checkEmpty("search by ID"))
     {
-        printf("Inventory is empty. Cannot search.\n");
         return;
     }
 
     int idToSearch;
-    int foundIndex = -1;
 
-    printf("Enter Product ID to search: ");
-    if (scanf("%d", &idToSearch) != 1)
+    idToSearch = getIdInput("Enter Product ID to search: ");
+    if (idToSearch == -1)
     {
-        clearInputBuffer();
-        printf("Invalid ID format entered.\n");
         return;
     }
-    clearInputBuffer();
 
-    for (int i = 0; i < ProductCount; i++)
-    {
-        if (Inventory[i].productId == idToSearch)
-        {
-            foundIndex = i;
-            break;
-        }
-    }
+    int foundIndex = findIndexById(idToSearch);
 
     if (foundIndex == -1)
     {
@@ -331,41 +343,50 @@ void searchProductById()
     else
     {
         printf("Product Found: Product ID: %d | Name: %s | Price: %.2f | Quantity: %d\n",
-               Inventory[foundIndex].productId,
-               Inventory[foundIndex].name,
-               Inventory[foundIndex].price,
-               Inventory[foundIndex].quantity);
+               Inventory[foundIndex].productId, Inventory[foundIndex].name,
+               Inventory[foundIndex].price, Inventory[foundIndex].quantity);
     }
 }
 
 void searchProductByName()
 {
-    if (ProductCount == 0)
+    if (checkEmpty("search by name"))
     {
-        printf("Inventory is empty. Cannot search.\n");
         return;
     }
 
     char nameSubstring[MAX_NAME_LENGTH];
+    char lowerSubstr[MAX_NAME_LENGTH];
+    char lowerName[MAX_NAME_LENGTH];
     bool found = false;
 
-    printf("Enter name to search (partial allowed): ");
+    printf("Enter name to search (partial allowed, case-insensitive): ");
     if (!readString(nameSubstring, MAX_NAME_LENGTH) || strlen(nameSubstring) == 0)
     {
-        printf(" -> Invalid or empty search term entered.\n");
+        printf("Invalid or empty search term entered.\n");
         return;
+    }
+
+    strcpy(lowerSubstr, nameSubstring);
+    for (int k = 0; lowerSubstr[k]; k++)
+    {
+        lowerSubstr[k] = tolower((unsigned char)lowerSubstr[k]);
     }
 
     printf("Products Found:\n");
     for (int i = 0; i < ProductCount; i++)
     {
-        if (strstr(Inventory[i].name, nameSubstring) != NULL)
+        strcpy(lowerName, Inventory[i].name);
+        for (int k = 0; lowerName[k]; k++)
+        {
+            lowerName[k] = tolower((unsigned char)lowerName[k]);
+        }
+
+        if (strstr(lowerName, lowerSubstr) != NULL)
         {
             printf("Product ID: %d | Name: %s | Price: %.2f | Quantity: %d\n",
-                   Inventory[i].productId,
-                   Inventory[i].name,
-                   Inventory[i].price,
-                   Inventory[i].quantity);
+                   Inventory[i].productId, Inventory[i].name,
+                   Inventory[i].price, Inventory[i].quantity);
             found = true;
         }
     }
@@ -378,9 +399,8 @@ void searchProductByName()
 
 void searchProductByPriceRange()
 {
-    if (ProductCount == 0)
+    if (checkEmpty("search by price range"))
     {
-        printf("Inventory is empty. Cannot search.\n");
         return;
     }
 
@@ -395,7 +415,7 @@ void searchProductByPriceRange()
             clearInputBuffer();
             break;
         }
-        printf(" -> Invalid minimum price. Please enter a non-negative number.\n");
+        printf("Invalid minimum price. Please enter a non-negative number.\n");
         clearInputBuffer();
     }
 
@@ -407,7 +427,7 @@ void searchProductByPriceRange()
             clearInputBuffer();
             break;
         }
-        printf(" -> Invalid maximum price. Must be >= minimum price (%.2f) and <= 100000.00.\n", minPrice);
+        printf("Invalid maximum price. Must be >= minimum price (%.2f) and <= 100000.00.\n", minPrice);
         clearInputBuffer();
     }
 
@@ -417,10 +437,8 @@ void searchProductByPriceRange()
         if (Inventory[i].price >= minPrice && Inventory[i].price <= maxPrice)
         {
             printf("Product ID: %d | Name: %s | Price: %.2f | Quantity: %d\n",
-                   Inventory[i].productId,
-                   Inventory[i].name,
-                   Inventory[i].price,
-                   Inventory[i].quantity);
+                   Inventory[i].productId, Inventory[i].name,
+                   Inventory[i].price, Inventory[i].quantity);
             found = true;
         }
     }
@@ -433,32 +451,20 @@ void searchProductByPriceRange()
 
 bool deleteProduct()
 {
-    if (ProductCount == 0)
+    if (checkEmpty("delete product"))
     {
-        printf("Inventory is empty. Cannot delete.\n");
         return false;
     }
 
     int idToDelete;
-    int foundIndex = -1;
 
-    printf("Enter Product ID to delete: ");
-    if (scanf("%d", &idToDelete) != 1)
+    idToDelete = getIdInput("Enter Product ID to delete: ");
+    if (idToDelete == -1)
     {
-        clearInputBuffer();
-        printf("Invalid ID format entered.\n");
         return false;
     }
-    clearInputBuffer();
 
-    for (int i = 0; i < ProductCount; i++)
-    {
-        if (Inventory[i].productId == idToDelete)
-        {
-            foundIndex = i;
-            break;
-        }
-    }
+    int foundIndex = findIndexById(idToDelete);
 
     if (foundIndex == -1)
     {
